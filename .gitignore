@@ -1,3 +1,4 @@
 **/*.certs.yml
 **/*.env
 cf_tunnel_token.txt
+**/data/
