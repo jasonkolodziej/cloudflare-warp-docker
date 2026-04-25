@@ -6,6 +6,7 @@ TARGET_IMAGE="ghcr.io/jasonkolodziej/cloudflare-warp-docker"
 DRY_RUN=0
 FORCE=0
 ONLY_TAGS=""
+IGNORE_MISSING_SOURCE=1
 
 usage() {
   cat <<'EOF'
@@ -20,6 +21,9 @@ Options:
   --only-tags CSV        Copy only these tags (comma-separated)
   --dry-run              Print operations without copying
   --force                Copy even when destination tag already exists
+  --ignore-missing-source
+                        Treat missing source package as "nothing to copy" (default: true)
+  --fail-missing-source Ignore no-op behavior and fail if source package is missing
   -h, --help             Show this help
 
 Notes:
@@ -59,6 +63,7 @@ parse_ghcr_image() {
 
 fetch_tags_from_gh() {
   local image="$1"
+  local allow_missing="${2:-0}"
   local owner package scope endpoint
   local parsed
 
@@ -78,6 +83,10 @@ fetch_tags_from_gh() {
       return 0
     fi
   done
+
+  if [[ "$allow_missing" -eq 1 ]]; then
+    return 2
+  fi
 
   echo "Unable to resolve package metadata via gh api for image: $image" >&2
   return 1
@@ -105,6 +114,14 @@ while [[ $# -gt 0 ]]; do
       FORCE=1
       shift
       ;;
+    --ignore-missing-source)
+      IGNORE_MISSING_SOURCE=1
+      shift
+      ;;
+    --fail-missing-source)
+      IGNORE_MISSING_SOURCE=0
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -129,10 +146,16 @@ else
     if [[ -n "$tag" ]]; then
       tags+=("$tag")
     fi
-  done < <(fetch_tags_from_gh "$SOURCE_IMAGE")
+  done < <(fetch_tags_from_gh "$SOURCE_IMAGE" "$IGNORE_MISSING_SOURCE")
 fi
 
 if [[ ${#tags[@]} -eq 0 ]]; then
+  if [[ -z "$ONLY_TAGS" && "$IGNORE_MISSING_SOURCE" -eq 1 ]]; then
+    echo "Source image: $SOURCE_IMAGE"
+    echo "Target image: $TARGET_IMAGE"
+    echo "Source package not found. Nothing to copy."
+    exit 0
+  fi
   echo "No tags found to copy." >&2
   exit 1
 fi

@@ -73,6 +73,7 @@ jobs:
           args=(
             --source-image "${source_image}"
             --target-image "${target_image}"
+            --ignore-missing-source
           )
 
           if [[ -n "${ONLY_TAGS}" ]]; then

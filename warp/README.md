@@ -171,6 +171,8 @@ Useful options:
 - `--dry-run` to preview all copy operations.
 - `--only-tags rhel-latest,debian-latest` to migrate specific tags.
 - `--source-image` / `--target-image` to override defaults.
+- If legacy source package no longer exists, script exits successfully with "nothing to copy".
+- Use `--fail-missing-source` if you prefer strict failure behavior.
 
 Check migration progress at any time:
 
