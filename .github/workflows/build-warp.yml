@@ -119,37 +119,37 @@ jobs:
         variant:
           - name: rhel8
             os_family: rhel
-            base_image: rockylinux:8
+            base_image: rockylinux:8-minimal
             distro: rhel
             os_version: "8"
             local_tag: warp:test-rhel8
           - name: debian11
             os_family: debian
-            base_image: debian:11
+            base_image: debian:11-slim
             distro: debian
             os_version: "11"
             local_tag: warp:test-debian11
           - name: debian12
             os_family: debian
-            base_image: debian:12
+            base_image: debian:12-slim
             distro: debian
             os_version: "12"
             local_tag: warp:test-debian12
           - name: debian13
             os_family: debian
-            base_image: debian:13
+            base_image: debian:13-slim
             distro: debian
             os_version: "13"
             local_tag: warp:test-debian13
           - name: fedora34
             os_family: rhel
-            base_image: fedora:34
+            base_image: fedora-minimal:34
             distro: fedora
             os_version: "34"
             local_tag: warp:test-fedora34
           - name: fedora35
             os_family: rhel
-            base_image: fedora:35
+            base_image: fedora-minimal:35
             distro: fedora
             os_version: "35"
             local_tag: warp:test-fedora35
@@ -268,32 +268,32 @@ jobs:
         variant:
           - name: rhel8
             os_family: rhel
-            base_image: rockylinux:8
+            base_image: rockylinux:8-minimal
             distro: rhel
             os_version: "8"
           - name: debian11
             os_family: debian
-            base_image: debian:11
+            base_image: debian:11-slim
             distro: debian
             os_version: "11"
           - name: debian12
             os_family: debian
-            base_image: debian:12
+            base_image: debian:12-slim
             distro: debian
             os_version: "12"
           - name: debian13
             os_family: debian
-            base_image: debian:13
+            base_image: debian:13-slim
             distro: debian
             os_version: "13"
           - name: fedora34
             os_family: rhel
-            base_image: fedora:34
+            base_image: fedora-minimal:34
             distro: fedora
             os_version: "34"
           - name: fedora35
             os_family: rhel
-            base_image: fedora:35
+            base_image: fedora-minimal:35
             distro: fedora
             os_version: "35"
           - name: ubuntu2004

@@ -136,6 +136,12 @@ Examples:
 
 Current automated variants include `rhel-8`, `debian-11`, `debian-12`, `debian-13`, `fedora-34`, `fedora-35`, `ubuntu-20.04`, `ubuntu-22.04`, and `ubuntu-24.04`.
 
+CI uses slim/minimal base images where available:
+
+- RHEL family: `rockylinux:8-minimal`, `fedora-minimal:{34,35}`
+- Debian family: `debian:{11,12,13}-slim`
+- Ubuntu variants currently use standard tags (`ubuntu:20.04`, `ubuntu:22.04`, `ubuntu:24.04`) because upstream `-minimal` tags are not published
+
 ## Build
 
 You can use GitHub Actions to build the image yourself.
