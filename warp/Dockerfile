@@ -141,6 +141,7 @@ RUN --mount=type=cache,id=apt-cache-${OS_FAMILY}-${BASE_IMAGE}-${TARGETARCH},tar
     else \
       echo "Unsupported OS_FAMILY: ${OS_FAMILY}. Use rhel or debian." >&2; exit 1; \
     fi; \
+    mkdir -p /etc/sysctl.d; \
     printf '%s\n' \
       'net.ipv4.ip_forward = 1' \
       'net.ipv6.conf.all.forwarding = 1' \
