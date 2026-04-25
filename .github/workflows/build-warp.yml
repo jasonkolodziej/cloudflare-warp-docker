@@ -167,7 +167,7 @@ jobs:
           fi
 
       - name: Build and load test image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: warp
           file: warp/Dockerfile
@@ -336,12 +336,12 @@ jobs:
         run: |
           tags="${{ steps.meta.outputs.tags }}"
           echo "$tags" | grep -E ':v${{ needs.prepare.outputs.warp_version }}-${{ matrix.variant.distro }}-main$' >/dev/null
-          echo "$tags" | grep -E ':v${{ needs.prepare.outputs.warp_version }}-${{ matrix.variant.distro }}-sha-[0-9a-f]+' >/dev/null
+          echo "$tags" | grep -E ':v${{ needs.prepare.outputs.warp_version }}-${{ matrix.variant.distro }}-[0-9a-f]{7,40}$' >/dev/null
           echo "$tags" | grep -E ':v${{ needs.prepare.outputs.warp_version }}-${{ matrix.variant.distro }}-latest$' >/dev/null
           echo "$tags" | grep -E ':${{ matrix.variant.distro }}-latest$' >/dev/null
 
       - name: Build and push image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: warp
           file: warp/Dockerfile
