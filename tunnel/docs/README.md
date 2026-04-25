@@ -24,3 +24,20 @@ After adding the config block, connect normally:
 ```shell
 ssh <your-hostname>
 ```
+
+### debugging `cloudflared`
+
+```sh
+/cdata # tree etc/ssl/
+etc/ssl/
+└── certs
+    └── ca-certificates.crt # global ca's provided by cloudflare
+
+1 directories, 1 files
+
+
+
+/cdata # find . -type f -iname '*cloudflare*'
+./usr/local/bin/cloudflared
+/cdata # 
+```
