@@ -1,0 +1,97 @@
+#* Docker Compose configuration for setting up a Cloudflare Tunnel container
+#? https://github.com/jonas-merkle/container-cloudflare-tunnel/tree/main
+#? This configuration pulls the latest Cloudflare Tunnel image from the specified repository
+#? and includes options for logging, automatic updates using Watchtower, health checks, and volume mounting.
+
+# extends:
+#   file: ../certs/compose.certs.yml
+services:
+  #* Cloudflare Tunnel Service
+  cloudflare-tunnel:
+    # depends_on:
+    #    init-tunnel-cert:
+    #     condition: service_completed_successfully
+    image: cloudflare/cloudflared:latest #? Pull the latest version of the Cloudflare Tunnel image
+    container_name: cloudflare-tunnel #? Name of the Cloudflare Tunnel container
+    hostname: cloudflare-tunnel #? Hostname for the Cloudflare Tunnel container
+    restart: unless-stopped #? Restart the container unless manually stopped
+    # pull_policy: always #? Pull the latest image
+    # deploy:
+    #   resources: #? Resource limits and reservations for the Cloudflare Tunnel container
+    #     limits:
+    #       memory: 512M #? Maximum memory limit for the Cloudflare Tunnel container
+    #     reservations:
+    #       memory: 128M #? Minimum memory reservation for the Cloudflare Tunnel container
+    #? Logging configuration for Cloudflare Tunnel container
+    logging:
+      driver: "json-file" #? Use the default json-file logging driver
+      options:
+        max-size: "100m" #? Maximum log file size before rotation (100 MB)
+        max-file: "10" #? Maximum number of log files to retain (10)
+
+    #* Network mode configuration
+    # network_mode: "host" #? Use the host network (no isolation between host and container)
+    extra_hosts: #? https://community.cloudflare.com/t/browser-ssh-connection-using-cloudflared-docker-image-not-working/449037/10
+      # - "host.docker.internal:host-gateway" #? https://docs.docker.com/desktop/features/networking/#i-want-to-connect-from-a-container-to-a-service-on-the-host
+      - "host.container.internal:host-gateway" #? https://docs.docker.com/desktop/features/networking/#i-want-to-connect-from-a-container-to-a-service-on-the-host
+
+    networks:
+      - cloudflare-tunnel
+
+    #* Command to run Cloudflare Tunnel
+    command: tunnel run  #? Command to start the Cloudflare tunnel, default is `tunnel run --no-autoupdate`
+    #* Volume configuration for time synchronization and hosts file persistence
+    #? See: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/local-management/tunnel-permissions/
+    #! Cannot determine default origin certificate path. No file cert.pem in [~/.cloudflared ~/.cloudflare-warp ~/cloudflare-warp /etc/cloudflared /usr/local/etc/cloudflared].
+    #! You need to specify the origin certificate path by specifying the origincert option in the configuration file, or set TUNNEL_ORIGIN_CERT environment variable originCertPath=#
+    #? See: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/configure-tunnels/cloudflared-parameters/origin-parameters/
+    volumes:
+      - /etc/localtime:/etc/localtime:ro #? Synchronize time with the host
+      - /etc/hosts:/etc/hosts:ro #? Mount hosts file from host to container
+      # - cloudflare:/etc/ssl #? SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+      - cloudflare:/etc/cloudflared #? TUNNEL_ORIGIN_CERT
+      - cloudflare:/usr/local/etc/cloudflared #? TUNNEL_ORIGIN_CERT
+      - cloudflare:/home/nonroot/.cloudflared #? mount at non-root, TUNNEL_ORIGIN_CERT
+
+    #* Environment variables for Cloudflare Tunnel
+    environment:
+      - TUNNEL_TOKEN_FILE="/run/secrets/cf_tunnel_token" #? Pass the Cloudflare Tunnel token from secret environment variable
+      - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN} #? Load the tunnel token from environment variable, which should be set in test.env
+      # - TUNNEL_ORIGIN_CERT=/etc/cloudflared/cert.pem #? Alternatively, specify the path to the origin certificate if not using TUNNEL_TOKEN, can be used instead for locally-managed tunnels.
+      - TUNNEL_ORIGIN_CERT=/home/nonroot/.cloudflared/cert.pem #? ~/.cloudflared/cert.pem , See: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/configure-tunnels/cloudflared-parameters/run-parameters/#origincert
+      #? Specifies the account certificate for one of your zones,
+      #? authorizing the client to serve as an origin for that zone.
+      #? You can obtain a certificate by using the cloudflared tunnel login command or by visiting https://dash.cloudflare.com/argotunnel.
+    secrets:
+      - cf_tunnel_token    #? `TUNNEL_TOKEN_FILE` is loaded directly from test.env via env_file.
+
+    #* Health check configuration to verify Cloudflare Tunnel readiness
+    healthcheck:
+      test: ["CMD", "cloudflared", "--version"] #? Check if cloudflared version command works
+      interval: 30s #? Time between health check attempts
+      timeout: 10s #? Time to wait for a response
+      retries: 3 #? Number of retries before marking as unhealthy
+      start_period: 10s #? Delay before health checks begin
+
+    #* Container labels for additional metadata
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true" #? Enable automatic updates with Watchtower
+
+networks: #? Networks for the Cloudflare Tunnel container
+  cloudflare-tunnel:
+    name: cloudflare-tunnel
+    attachable: true
+    # external: true
+
+volumes: #? Volumes for the Cloudflare Tunnel container
+  cloudflare:
+    driver: local
+
+secrets:
+  cf_tunnel_token:
+    name: cf_tunnel_token
+    environment: "CF_TUNNEL_TOKEN" #? Load the Cloudflare Tunnel token from environment variable, which should be set in test.env
+    # file: ./test.text #? Load the Cloudflare Tunnel token from a file, which should contain the token value
+
+# env_file:
+#   - test.env #? Load environment variables from the test.env file, which should contain CF_TUNNEL_TOKEN
